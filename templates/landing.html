@@ -4,8 +4,21 @@
     {{ super() }}
 {% endblock %}
 {% block content %}
-    <h1 style="color: #fefefe"><a style="color: #808080" href="/static/ouijortsle.png">Ouijordle</a></h1>
-    <p style="color: #fefefe">What if <a style="color: #808080" href="https://reddit.com/r/AskOuiji">r/AskOuiji</a> and <a style="color: #808080" href="https://www.nytimes.com/games/wordle/index.html">Wordle</a> had a child?</p>
+    <h1><a href="/static/ouijortsle.png">Ouijordle</a></h1>
+    <p>What if <a href="https://reddit.com/r/AskOuija">r/AskOuija</a> and <a href="https://www.nytimes.com/games/wordle/index.html">Wordle</a> had a child?</p>
+    <p>Guess the <strong>OUIJORDLE</strong> in six guesses with up to four of your friends.</p>
+    <p>Each player silently enters one letter in turn to form their guess.</p>
+    <p>Players have 5 minutes to complete the <strong>OUIJORDLE</strong>, but each letter input adds 5 seconds.</p>
+    <p>If a guess is not a valid word, it does not count as a guess. However, it still uses clock time.</p>
+    <span>Join a room:
+        <form id="start">
+            <input id="room" type="text" placeholder="Room ID"/>
+        </form>
+    </span>
+    <footer>
+        <a href="/admin">Create a room</a>
+    </footer>
 {% endblock %}
 {% block scripts %}
+    <script src="/static/landing.js"></script>
 {% endblock %}

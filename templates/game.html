@@ -4,11 +4,17 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
-  <script src="script.js" defer></script>
-  <title>Wordle Clone</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/script.js" defer></script>
+  <title>Ouijordle</title>
 </head>
 <body>
+  <div style="text-align: center;">
+    <h1 id="time">05:00</h1>
+  </div>
+  <div class="panel__header">
+    <span class="bubble">owo</span><span class="bubble">nat</span><span class="bubble">joy</span><span class="bubble">kai</span><span class="bubble">ben</span>
+  </div>
   <div class="alert-container" data-alert-container></div>
   <div data-guess-grid class="guess-grid">
     <div class="tile"></div>
@@ -78,5 +84,6 @@
       </svg>
     </button>
   </div>
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
 </body>
 </html>

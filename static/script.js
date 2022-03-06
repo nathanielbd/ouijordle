@@ -15295,12 +15295,13 @@ const DANCE_ANIMATION_DURATION = 500
 const keyboard = document.querySelector("[data-keyboard]")
 const alertContainer = document.querySelector("[data-alert-container]")
 const guessGrid = document.querySelector("[data-guess-grid]")
-const offsetFromDate = new Date(2022, 0, 1)
-const msOffset = Date.now() - offsetFromDate
-const dayOffset = msOffset / 1000 / 60 / 60 / 24
-const targetWord = targetWords[Math.floor(dayOffset)]
+// const offsetFromDate = new Date(2022, 0, 1)
+// const msOffset = Date.now() - offsetFromDate
+// const dayOffset = msOffset / 1000 / 60 / 60 / 24
+// const targetWord = targetWords[Math.floor(dayOffset)]
+var targetWord = targetWords[Math.floor(Math.random() * targetWords.length)]
 
-startInteraction()
+// startInteraction()
 
 function startInteraction() {
   document.addEventListener("click", handleMouseClick)
@@ -15483,4 +15484,48 @@ function danceTiles(tiles) {
       )
     }, (index * DANCE_ANIMATION_DURATION) / 5)
   })
+}
+
+// https://stackoverflow.com/a/20618517
+
+var timer = 5 * 60, minutes, seconds;
+var display = $('#time');
+
+function startClock() {
+  var clock = setInterval(function () {
+    minutes = parseInt(timer / 60, 10)
+    seconds = parseInt(timer % 60, 10);
+
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    seconds = seconds < 10 ? "0" + seconds : seconds;
+
+    display.text(minutes + ":" + seconds);
+
+    if (--timer < 0) {
+        showAlert(targetWord.toUpperCase(), null)
+        stopInteraction()
+        clearInterval(clock);
+    }
+  }, 1000);
+}
+
+// var socket = io()
+socket.on('begin', function() {
+  targetWord = targetWords[Math.floor(Math.random() * targetWords.length)]
+  startInteraction();
+  startClock();
+  $controls.hide()
+  $game.show()
+})
+
+socket.on('resume', function() {
+  startInteraction();
+})
+
+function increment() {
+  timer += 5;
+}
+
+function decrement() {
+  timer -= 5;
 }

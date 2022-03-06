@@ -97,6 +97,14 @@ footer a:hover {
   padding: 0.5rem;
 }
 
+.bubble.highlight {
+  background: hsl(
+    var(--hue, 115),
+    var(--saturation, 29%),
+    var(--lightness, 43%)
+  )
+}
+
 .panel__label {
   text-transform: uppercase;
   letter-spacing: 1px;

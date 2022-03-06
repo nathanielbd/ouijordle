@@ -1,0 +1,7 @@
+- end of game statistics
+- replay button
+- untether whether a tile can be deleted from the order and index so that fewer than 5 players can play
+- edge cases
+    - user refreshes page
+    - user is disconnected
+    - user joins when game is active

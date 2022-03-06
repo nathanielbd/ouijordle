@@ -11,7 +11,7 @@ socketio.init_app(app, cors_allowed_origins="*")
 # dictionary pairing room name to admin socket id
 rooms = {}
 
-# dictionary pairing player name to socket id
+# dictionary pairing room name to list of player names in the room
 names = {}
 
 @app.route('/')
@@ -52,27 +52,34 @@ def exists(data):
 @socketio.on('join')
 def on_join(data):
     name = data['name']
+    room = data['room']
     # refactor so that it is like create
     # and checks if the name is taken
-    if (name in names):
-        emit('name_taken', { 'name': name }, room=room)
-    name = data['name']
-    room = data['room']
-    if not is_admin(request.sid, room):
-        join_room(room)
+    if (room in names):
+        if (name in names[room]):
+            emit('name_taken', { 'name': name })
+            return
+        else:
+            join_room(room)
+            names[room].append(name)
+    else:
+        names[room] = [name]
     emit('join', data, room=room)
     print(f'{name} joined {room}')
 
 @socketio.on('begin')
 def on_begin(data):
     room = data['room']
+    rand = data['rand']
     if is_admin(request.sid, room):
-        emit('begin', room=room)
+        emit('begin', rand, room=room)
 
 @socketio.on('resume')
 def on_resume(data):
     room = data['room']
-    emit('resume', room=room)
+    idx = data['idx']
+    order = data['order']
+    emit('resume', { 'order': order, 'idx': idx }, room=room)
 
 def ack():
     print('message was received!')
@@ -88,6 +95,39 @@ def on_create(data):
         rooms[room] = request.sid
         emit('create', True, callback=ack)
         print(f'created room: {room}')
+
+@socketio.on('player_list')
+def on_player_list(data):
+    room = data['room']
+    player_list = data['player_list']
+    emit('player_list', player_list, room=room)
+
+@socketio.on('write_letter')
+def on_write_letter(data):
+    room = data['room']
+    emit('write_letter', data, room=room)
+
+@socketio.on('overwrite_letter')
+def on_overwrite_letter(data):
+    room = data['room']
+    emit('overwrite_letter', data, room=room)
+
+# handled by on_resume
+# @socketio.on('confirm_letter')
+# def on_confirm_letter():
+#     pass
+
+@socketio.on('delete_letter')
+def on_delete_letter(data):
+    room = data['room']
+    order = data['order']
+    emit('delete_letter', order, room=room)
+
+@socketio.on('submit_guess')
+def on_submit_guess(data):
+    room = data['room']
+    order = data['order']
+    emit('submit_guess', order, room=room)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, host='0.0.0.0')

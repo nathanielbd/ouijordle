@@ -15314,36 +15314,78 @@ function stopInteraction() {
 }
 
 function handleMouseClick(e) {
+  const activeTiles = getActiveTiles()
+  
   if (e.target.matches("[data-key]")) {
-    pressKey(e.target.dataset.key)
-    return
+    if (activeTiles.length > order) {
+      deleteKey()
+      pressKey(e.target.dataset.key)
+      socket.emit('overwrite_letter', { order: order, key: e.target.dataset.key, room: data.room })
+    }
+    else{
+      pressKey(e.key)
+      socket.emit('write_letter', { order: order, key: e.target.dataset.key, room: data.room })
+      return
+    }
   }
 
   if (e.target.matches("[data-enter]")) {
-    submitGuess()
-    return
+    if (activeTiles.length === WORD_LENGTH) {
+      submitGuess()
+      socket.emit('submit_guess', { order: order, room: data.room })
+      return
+    }
+    else {
+      stopInteraction()
+      activeTiles[activeTiles.length - 1].dataset.state = "wrong" // purely to change the css
+      $("#names").children().eq(order).toggleClass("highlight")
+      socket.emit('resume', { room: data.room, idx: order+1, order: order })
+      return
+    }
   }
 
   if (e.target.matches("[data-delete]")) {
     deleteKey()
+    socket.emit('delete_letter', { order: order, room: data.room })
     return
   }
 }
 
 function handleKeyPress(e) {
+  const activeTiles = getActiveTiles()
+
   if (e.key === "Enter") {
-    submitGuess()
-    return
+    if (activeTiles.length === WORD_LENGTH) {
+      submitGuess()
+      socket.emit('submit_guess', { order: order, room: data.room })
+      return
+    }
+    else {
+      stopInteraction()
+      activeTiles[activeTiles.length - 1].dataset.state = "wrong" // purely to change the css
+      $("#names").children().eq(order).toggleClass("highlight")
+      socket.emit('resume', { room: data.room, idx: order+1, order: order })
+      return
+    }
   }
 
   if (e.key === "Backspace" || e.key === "Delete") {
     deleteKey()
+    socket.emit('delete_letter', { order: order, room: data.room })
     return
   }
 
   if (e.key.match(/^[a-z]$/)) {
-    pressKey(e.key)
-    return
+    if (activeTiles.length > order) {
+      deleteKey()
+      pressKey(e.key)
+      socket.emit('overwrite_letter', { order: order, key: e.key, room: data.room })
+    }
+    else{
+      pressKey(e.key)
+      socket.emit('write_letter', { order: order, key: e.key, room: data.room })
+      return
+    }
   }
 }
 
@@ -15510,16 +15552,54 @@ function startClock() {
 }
 
 // var socket = io()
-socket.on('begin', function() {
-  targetWord = targetWords[Math.floor(Math.random() * targetWords.length)]
-  startInteraction();
+socket.on('begin', function(rand) {
+  targetWord = targetWords[Math.floor(rand * targetWords.length)]
+  order = playerList.indexOf(data.name)
+  if (order === 0) {
+    startInteraction();
+  }
+  $("#names").children().eq(0).toggleClass("highlight")
   startClock();
   $controls.hide()
   $game.show()
 })
 
-socket.on('resume', function() {
-  startInteraction();
+socket.on('resume', function(data) {
+  const activeTiles = getActiveTiles()
+  idxToHighlight = data.idx % playerList.length
+  $("#names").children().eq(idxToHighlight).toggleClass("highlight")
+  if (order === idxToHighlight) {
+    startInteraction();
+  }
+  if (order !== data.order) {
+    $("#names").children().eq(data.order).toggleClass("highlight")
+    activeTiles[activeTiles.length - 1].dataset.state = "wrong" // purely to change the css
+  }
+})
+
+socket.on('write_letter', function(data) {
+  if (data.order !== order) {
+    pressKey(data.key)
+  }
+})
+
+socket.on('overwrite_letter', function(data) {
+  if (data.order !== order) {
+    deleteKey()
+    pressKey(data.key)
+  }
+})
+
+socket.on('delete_letter', function(sender_order) {
+  if (order !== sender_order) {
+    deleteKey()
+  }
+})
+
+socket.on('submit_guess', function(sender_order) {
+  if (order !== sender_order) {
+    submitGuess()
+  }
 })
 
 function increment() {

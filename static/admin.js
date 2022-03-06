@@ -14,7 +14,10 @@ var $info = $("#info")
 var $names = $("#names")
 
 var count = 0
+var playerList = []
 var playerStats = {}
+var order;
+
 var $players = $('#players')
 var $beginButton = $('#begin')
 
@@ -46,10 +49,12 @@ socket.on('join', function(data) {
     $players.append(`<span class="bubble">${data.name}</span>`)
     $names.append(`<span class="bubble">${data.name}</span>`)
     playerStats[data.name] = {fails: 0, time: 0}
+    playerList.push(data.name)
+    socket.emit("player_list", { room: data.room, player_list: playerList })
 })
 
 $beginButton.on('click', function() {
-    socket.emit('begin', data)
+    socket.emit('begin', Object.assign({}, data, { rand: Math.random() }))
 })
 
 socket.on('create', function(success) {

@@ -15445,6 +15445,7 @@ function submitGuess() {
   stopInteraction()
   activeTiles.forEach((...params) => flipTile(...params, guess))
   activeTiles.forEach((tile) => $(tile).toggleClass("confirmed"))
+  timer += 30
 }
 
 function flipTile(tile, index, array, guess) {
@@ -15488,10 +15489,15 @@ function getActiveTiles() {
   return guessGrid.querySelectorAll('[data-state="active"]')
 }
 
-function showAlert(message, duration = 1000) {
+function showAlert(message, duration = 1000, html=false) {
   const alert = document.createElement("div")
-  alert.textContent = message
   alert.classList.add("alert")
+  if (!html) {
+    alert.textContent = message
+  }
+  else {
+    alert.innerHTML = message
+  }
   alertContainer.prepend(alert)
   if (duration == null) return
 
@@ -15516,18 +15522,116 @@ function shakeTiles(tiles) {
   })
 }
 
+function getShareText() {
+  const guesses = [...guessGrid.querySelectorAll('[data-letter]:not(.confirmed):not([data-state="active"]')]
+  const emojis = guesses.map((tile, idx) => {
+    var ret; 
+    if (tile.dataset.state === 'wrong') {
+      ret = '⬛'
+    }
+    if (tile.dataset.state === 'wrong-location') {
+      ret = '🟨'
+    }
+    if (tile.dataset.state === 'correct') {
+      ret = '🟩'
+    }
+    if ((idx+1) % 5 === 0) {
+      ret += '<br>'
+    }
+    return ret
+  }).join('')
+  const lastGuess = guesses.slice(-5).reduce((word, tile) => {
+    return word + tile.dataset.letter
+  }, "")
+  var tries = guesses.length/5
+  if (lastGuess !== targetWord) {
+    tries = 'X'
+  }
+  return `Ouijordle ${tries}/6<br>${emojis}<br>${window.location.origin}`
+}
+
+socket.on('end', function() {
+  var restartButton = document.createElement("button")
+  restartButton.textContent = 'Restart'
+  alertContainer.appendChild(restartButton)
+  $(restartButton).on('click', function() {
+    socket.emit('restart', { room: data.room, rand: Math.random() })
+  })
+})
+
+socket.on('restart', function(rand) {
+  targetWord = targetWords[Math.floor(rand * targetWords.length)]
+  alertContainer.innerHTML = ''
+  timer = 5 * 60
+  startClock()
+  if (order === 0) {
+    startInteraction()
+  }
+  else {
+    stopInteraction()
+  }
+  $("#names").children().eq(0).addClass("highlight")
+  $('.guess-grid').html('<div class="tile"></div>'.repeat(30))
+  $('.keyboard').html(getKeyboardInitialHTML())
+})
+
+function getKeyboardInitialHTML() {
+  return `
+          <button class="key" data-key="Q">Q</button>
+          <button class="key" data-key="W">W</button>
+          <button class="key" data-key="E">E</button>
+          <button class="key" data-key="R">R</button>
+          <button class="key" data-key="T">T</button>
+          <button class="key" data-key="Y">Y</button>
+          <button class="key" data-key="U">U</button>
+          <button class="key" data-key="I">I</button>
+          <button class="key" data-key="O">O</button>
+          <button class="key" data-key="P">P</button>
+          <div class="space"></div>
+          <button class="key" data-key="A">A</button>
+          <button class="key" data-key="S">S</button>
+          <button class="key" data-key="D">D</button>
+          <button class="key" data-key="F">F</button>
+          <button class="key" data-key="G">G</button>
+          <button class="key" data-key="H">H</button>
+          <button class="key" data-key="J">J</button>
+          <button class="key" data-key="K">K</button>
+          <button class="key" data-key="L">L</button>
+          <div class="space"></div>
+          <button data-enter class="key large">Enter</button>
+          <button class="key" data-key="Z">Z</button>
+          <button class="key" data-key="X">X</button>
+          <button class="key" data-key="C">C</button>
+          <button class="key" data-key="V">V</button>
+          <button class="key" data-key="B">B</button>
+          <button class="key" data-key="N">N</button>
+          <button class="key" data-key="M">M</button>
+          <button data-delete class="key large">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+              <path fill="var(--color-tone-1)" d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7.07L2.4 12l4.66-7H22v14zm-11.59-2L14 13.41 17.59 17 19 15.59 15.41 12 19 8.41 17.59 7 14 10.59 10.41 7 9 8.41 12.59 12 9 15.59z"></path>
+            </svg>
+          </button>
+          `
+}
+
 function checkWinLose(guess, tiles) {
   if (guess === targetWord) {
-    showAlert("You Win", 5000)
+    showAlert(getShareText(), null, true)
+    showAlert("You win!", null)
     danceTiles(tiles)
     stopInteraction()
+    clearInterval(clock)
+    socket.emit('end', data.room)
     return
   }
 
   const remainingTiles = guessGrid.querySelectorAll(":not([data-letter])")
   if (remainingTiles.length === 0) {
+    showAlert(getShareText(), null, true)
     showAlert(targetWord.toUpperCase(), null)
     stopInteraction()
+    clearInterval(clock)
+    socket.emit('end', data.room)
   }
 }
 
@@ -15550,9 +15654,10 @@ function danceTiles(tiles) {
 
 var timer = 5 * 60, minutes, seconds;
 var display = $('#time');
+var clock;
 
 function startClock() {
-  var clock = setInterval(function () {
+  clock = setInterval(function () {
     minutes = parseInt(timer / 60, 10)
     seconds = parseInt(timer % 60, 10);
 
@@ -15621,11 +15726,3 @@ socket.on('submit_guess', function(sender_order) {
     submitGuess()
   }
 })
-
-function increment() {
-  timer += 5;
-}
-
-function decrement() {
-  timer -= 5;
-}

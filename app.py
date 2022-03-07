@@ -129,5 +129,17 @@ def on_submit_guess(data):
     order = data['order']
     emit('submit_guess', order, room=room)
 
+@socketio.on('end')
+def on_end(room):
+    if is_admin(request.sid, room):
+        emit('end')
+
+@socketio.on('restart')
+def on_restart(data):
+    room = data['room']
+    rand = data['rand']
+    if is_admin(request.sid, room):
+        emit('restart', rand, room=room)
+
 if __name__ == '__main__':
     socketio.run(app, debug=True, host='0.0.0.0')

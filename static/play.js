@@ -18,6 +18,8 @@ var count = 0
 var playerList = []
 var order;
 
+var $beginButton = null;
+
 $roomCount.text('0 players')
 
 $startForm.on('submit', function(event) {

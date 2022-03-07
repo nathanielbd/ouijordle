@@ -314,6 +314,10 @@ footer a:hover {
   margin-bottom: .5em;
 }
 
+/* .alert.end {
+  background-color: hsl(240, 3%, 18%);
+} */
+
 .alert:last-child {
   margin-bottom: 0;
 }

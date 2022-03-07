@@ -1,7 +1,10 @@
 - end of game statistics
 - replay button
-- untether whether a tile can be deleted from the order and index so that fewer than 5 players can play
+- bug where the clocks are not synced
+    - Edge pauses `setInterval` when the tab is inactive (like when you alt-tab), but other browsers do not
 - edge cases
     - user refreshes page
     - user is disconnected
     - user joins when game is active
+- emotes
+- maybe modify rules to say that instead of silently enter letters, you can actually say words on a Ouija board, like "yes", "no", and "goodbye"

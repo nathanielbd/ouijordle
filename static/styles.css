@@ -173,9 +173,18 @@ footer a:hover {
   --lightness: 43%;
 }
 
+.combined-panel {
+  display: flex;
+  flex-direction: row;
+}
+
+#time {
+  margin: 2em;
+}
+
 .guess-grid {
   display: grid;
-  justify-content: center;
+  /* justify-content: center; */
   align-content: center;
   flex-grow: 1;
   grid-template-columns: repeat(5, 4em);
@@ -226,6 +235,10 @@ footer a:hover {
 
 .tile.flip {
   transform: rotateX(90deg);
+}
+
+.tile.confirmed {
+  background-color: hsl(240, 5%, 42%)
 }
 
 @keyframes shake {

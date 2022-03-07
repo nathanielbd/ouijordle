@@ -15317,7 +15317,7 @@ function handleMouseClick(e) {
   const activeTiles = getActiveTiles()
   
   if (e.target.matches("[data-key]")) {
-    if (activeTiles.length > order) {
+    if (activeTiles.length > $(".tile.confirmed").length) {
       deleteKey()
       pressKey(e.target.dataset.key)
       socket.emit('overwrite_letter', { order: order, key: e.target.dataset.key, room: data.room })
@@ -15331,23 +15331,28 @@ function handleMouseClick(e) {
 
   if (e.target.matches("[data-enter]")) {
     if (activeTiles.length === WORD_LENGTH) {
+      $(activeTiles[activeTiles.length - 1]).toggleClass("confirmed")
       submitGuess()
       socket.emit('submit_guess', { order: order, room: data.room })
       return
     }
     else {
-      stopInteraction()
-      activeTiles[activeTiles.length - 1].dataset.state = "wrong" // purely to change the css
-      $("#names").children().eq(order).toggleClass("highlight")
-      socket.emit('resume', { room: data.room, idx: order+1, order: order })
-      return
+      if (activeTiles.length > $('.tile.confirmed').length) {
+        stopInteraction()
+        $(activeTiles[activeTiles.length - 1]).toggleClass("confirmed")
+        $("#names").children().eq(order).toggleClass("highlight")
+        socket.emit('resume', { room: data.room, idx: activeTiles.length, order: order })
+        return
+      }
     }
   }
 
   if (e.target.matches("[data-delete]")) {
-    deleteKey()
-    socket.emit('delete_letter', { order: order, room: data.room })
-    return
+    if (activeTiles.length > $(".tile.confirmed").length) {
+      deleteKey()
+      socket.emit('delete_letter', { order: order, room: data.room })
+      return
+    }
   }
 }
 
@@ -15356,27 +15361,32 @@ function handleKeyPress(e) {
 
   if (e.key === "Enter") {
     if (activeTiles.length === WORD_LENGTH) {
+      $(activeTiles[activeTiles.length - 1]).toggleClass("confirmed")
       submitGuess()
       socket.emit('submit_guess', { order: order, room: data.room })
       return
     }
     else {
-      stopInteraction()
-      activeTiles[activeTiles.length - 1].dataset.state = "wrong" // purely to change the css
-      $("#names").children().eq(order).toggleClass("highlight")
-      socket.emit('resume', { room: data.room, idx: order+1, order: order })
-      return
+      if (activeTiles.length > $('.tile.confirmed').length) {
+        stopInteraction()
+        $(activeTiles[activeTiles.length - 1]).toggleClass("confirmed")
+        $("#names").children().eq(order).toggleClass("highlight")
+        socket.emit('resume', { room: data.room, idx: activeTiles.length, order: order })
+        return
+      }
     }
   }
 
   if (e.key === "Backspace" || e.key === "Delete") {
-    deleteKey()
-    socket.emit('delete_letter', { order: order, room: data.room })
-    return
+    if (activeTiles.length > $('.tile.confirmed').length) {
+      deleteKey()
+      socket.emit('delete_letter', { order: order, room: data.room })
+      return
+    }
   }
 
   if (e.key.match(/^[a-z]$/)) {
-    if (activeTiles.length > order) {
+    if (activeTiles.length > $('.tile.confirmed').length) {
       deleteKey()
       pressKey(e.key)
       socket.emit('overwrite_letter', { order: order, key: e.key, room: data.room })
@@ -15405,6 +15415,7 @@ function deleteKey() {
   lastTile.textContent = ""
   delete lastTile.dataset.state
   delete lastTile.dataset.letter
+  $(lastTile).removeClass("confirmed")
 }
 
 function submitGuess() {
@@ -15421,12 +15432,19 @@ function submitGuess() {
 
   if (!dictionary.includes(guess)) {
     showAlert("Not in word list")
-    shakeTiles(activeTiles)
+    const activeTiles = getActiveTiles()
+    activeTiles.forEach((tile) => {
+      tile.textContent = "";
+      delete tile.dataset.state;
+      delete tile.dataset.letter;
+      $(tile).toggleClass("confirmed");
+    })
     return
   }
 
   stopInteraction()
   activeTiles.forEach((...params) => flipTile(...params, guess))
+  activeTiles.forEach((tile) => $(tile).toggleClass("confirmed"))
 }
 
 function flipTile(tile, index, array, guess) {
@@ -15573,7 +15591,7 @@ socket.on('resume', function(data) {
   }
   if (order !== data.order) {
     $("#names").children().eq(data.order).toggleClass("highlight")
-    activeTiles[activeTiles.length - 1].dataset.state = "wrong" // purely to change the css
+    $(activeTiles[activeTiles.length - 1]).toggleClass("confirmed")
   }
 })
 
@@ -15597,7 +15615,9 @@ socket.on('delete_letter', function(sender_order) {
 })
 
 socket.on('submit_guess', function(sender_order) {
+  const activeTiles = getActiveTiles()
   if (order !== sender_order) {
+    $(activeTiles[activeTiles.length - 1]).toggleClass("confirmed")
     submitGuess()
   }
 })
